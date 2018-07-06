@@ -1,4 +1,8 @@
 {
   "prop": false,
-  "prop2": 123
+  "prop2": 123.568,
+  "prop3": {
+    "name": "john ayylmao",
+    "age":  69
+  }
 }

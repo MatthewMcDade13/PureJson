@@ -2,6 +2,7 @@
 #include "Json.h"
 #include <unordered_map>
 #include <cctype>
+#include <assert.h>
 #include <iostream>
 #include <string>
 
@@ -11,6 +12,9 @@ static int tryParseBoolToken(char* str);
 static bool cmpSubStr(const char* a, const char* b, size_t length);
 static char* fillJson(char* raw, Json* json);
 
+static void snipDblQuotes(char* str, char*& begin, char*& end);
+static std::string parseString(char* str);
+static char* parseCString(char* str);
 
 struct Token
 {
@@ -36,8 +40,7 @@ struct JsonProp
 {
 	enum class Type : int
 	{
-		NUMBER_DBL,
-		NUMBER_INT,
+		NUMBER,
 		STRING,
 		BOOL,
 		OBJ,
@@ -49,11 +52,10 @@ struct JsonProp
 
 	union
 	{
-		double dnum;
-		bool flag;
-		long long inum;
-		std::string string;
-		Json** array;
+		double num;
+		bool boolean;
+		char* string;
+		JsonArray array;
 		Json* obj;
 	};
 
@@ -67,25 +69,41 @@ struct JsonProp
 	{
 		switch (other.type)
 		{
-			case Type::NUMBER_DBL: dnum = other.dnum; break;
-			case Type::NUMBER_INT: inum = other.inum; break;
-			case Type::STRING: string = std::move(other.string); break;
-			case Type::BOOL: flag = other.flag; break;
+			case Type::NUMBER: num = other.num; break;
+			case Type::STRING:
+				string = other.string;
+				other.string = nullptr;
+			break;
+			case Type::BOOL: boolean = other.boolean; break;
 			case Type::OBJ: 
 				obj = other.obj;
 				other.obj = nullptr;
 			break;
 			case Type::ARRAY: 
 				array = other.array;
-				other.array = nullptr;
+				other.array = { nullptr, 0 };
 			break;
 		}
 	}
 
 	~JsonProp()
 	{
-		if (type == Type::STRING)
-			string.~basic_string();
+		switch (type)
+		{
+			case Type::STRING:
+				delete string;
+				string = nullptr;
+			break;
+			case Type::ARRAY:
+				// TOOD: Verify Cleanup
+				delete array.items;
+				array.items = nullptr;
+			break;
+			case Type::OBJ:
+				delete obj;
+				obj = nullptr;
+			break;
+		}
 	}
 };
 
@@ -121,86 +139,199 @@ EXTERN_C Json * pureJSON_parse(char * raw)
 
 		Token t = getToken(itr);
 
-		switch (t.type)
-		{
-			case Token::OPEN_BRACE:
-
-			break;
-		}
-
-		if (t.type != Token::UNKNOWN)
-		{
-			char* str = (char*)malloc(t.length + 1);
-
-			memcpy(str, itr, t.length);
-			str[t.length] = NULL;
-
-			std::cout << str << std::endl;
-
-			itr += t.length;
-
-			free(str);
-		}
-		else
-		{
-			itr++;
-		}
+		itr = fillJson(itr, json);
 	}
 
 	return json;
 }
 
+EXTERN_C double pureJSON_getNum(Json * json, const char * propName)
+{
+	JsonProp& prop = json->data[std::string(propName)];
+	assert(prop.type == JsonProp::Type::NUMBER);
+
+	return prop.num;
+}
+
+EXTERN_C bool pureJSON_getBool(Json * json, const char * propName)
+{
+	JsonProp& prop = json->data[std::string(propName)];
+	assert(prop.type == JsonProp::Type::BOOL);
+
+	return prop.boolean;
+}
+
+EXTERN_C const char* pureJSON_getString(Json * json, const char * propName)
+{
+	JsonProp& prop = json->data[std::string(propName)];
+	assert(prop.type == JsonProp::Type::STRING);
+
+	return prop.string;
+}
+
+EXTERN_C JsonArray pureJSON_getArray(Json * json, const char * propName)
+{
+	JsonProp& prop = json->data[std::string(propName)];
+	assert(prop.type == JsonProp::Type::ARRAY);
+
+	return prop.array;
+}
+
+EXTERN_C Json* pureJSON_getObj(Json * json, const char * propName)
+{
+	JsonProp& prop = json->data[std::string(propName)];
+	assert(prop.type == JsonProp::Type::OBJ);
+
+	return prop.obj;
+}
 
 char* fillJson(char * raw, Json * json)
 {
 	char* itr = ++raw;
 
-	Token t = getToken(itr);
-	if (t.type == Token::UNKNOWN) return nullptr; // TODO: error 
+	bool done = false;
 
-	if (t.type == Token::CLOSE_BRACE) return itr;
-
-	if (t.type == Token::STRING)
+	while (!done)
 	{
-		itr += t.length;
-		Token colon = getToken(t.str + t.length);
-		if (colon.type == Token::COLON)
-		{
-			itr += colon.length;
-			std::string propName(t.str, t.length);
-			Token val = getToken(itr);
+		itr = eatWhitespace(itr);
 
-			switch (val.type)
+		Token t = getToken(itr);
+
+		if (t.type == Token::STRING)
+		{
+			itr += t.length;
+			itr = eatWhitespace(itr);
+			Token colon = getToken(itr);
+
+			if (colon.type == Token::COLON)
 			{
-				case Token::BOOL: {
-					JsonProp jprop = {};
-					jprop.name = propName;
+				itr += colon.length;
+				itr = eatWhitespace(itr);
+
+				std::string propName = parseString(t.str);
+				Token val = getToken(itr);
+
+				JsonProp jprop = {};
+				jprop.name = propName;
+
+				switch (val.type)
+				{
+				case Token::BOOL:
 					jprop.type = JsonProp::Type::BOOL;
 
 					if (cmpSubStr(val.str, "false", val.length))
 					{
-						jprop.flag = false;
-						json->data.emplace(propName, std::move(jprop));
-
+						jprop.boolean = false;
 					}
 					else if (cmpSubStr(val.str, "true", val.length))
 					{
-						jprop.flag = true;
-						json->data.emplace(propName, std::move(jprop));
-
+						jprop.boolean = true;
 					}
-				} break;
+
+				break;
 				case Token::NUMBER:
+					jprop.type = JsonProp::Type::NUMBER;
+					char buffer[255];
+					memcpy(buffer, val.str, val.length);
+					jprop.num = atof(buffer);
 				break;
-				case Token::STRING:
+				case Token::STRING: {
+					jprop.type = JsonProp::Type::STRING;
+					jprop.string = parseCString(val.str);
+				} break;
+				case Token::SQUARE_BRACKET_OPEN:
+					// TODO: Parse arrays
 				break;
+				case Token::OPEN_BRACE:
+					jprop.type = JsonProp::Type::OBJ;
+					jprop.obj = pureJSON_create();
+					itr = fillJson(itr, jprop.obj);
+				break;
+				}
+
+				json->data.emplace(propName, std::move(jprop));
+				itr += val.length;
+
+				itr = eatWhitespace(itr);
+				
+				Token next = getToken(itr);
+
+				if (next.type == Token::COMMA)
+				{
+					itr += next.length;
+					continue;
+				}
+				else
+				{
+					itr = eatWhitespace(itr);
+					Token endBrace = getToken(itr);
+					if (endBrace.type == Token::CLOSE_BRACE)
+					{
+						itr += endBrace.length;
+						done = true;
+					}
+					else
+					{
+						std::cerr << "Missing comma after property name" << std::endl;
+						return nullptr; // TODO: ERROR
+					}
+				}				
+
+			}
+			else
+			{
+				std::cerr << "Expected Colon after property name" << std::endl;
+				return nullptr; // TODO: ERROR
 			}
 		}
-		else
-		{
-			// TODO: error 
-		}
+
 	}
+	return itr;
+}
+
+void snipDblQuotes(char* str, char *& begin, char *& end)
+{
+	begin = ++str;
+	end = str;
+
+	while (*end != '"')
+	{
+		if (*end == NULL)
+		{
+			std::cerr << "Could not find end of string parsed string" << std::endl;
+			// TODO: ERROR
+			end--;
+			break;
+		}
+
+		end++;
+	}
+}
+
+std::string parseString(char * str)
+{
+	char* begin;
+	char* end;
+
+	snipDblQuotes(str, begin, end);
+
+	std::string result(begin, end);
+	return result;
+}
+
+char * parseCString(char * str)
+{
+	char* begin;
+	char* end;
+
+	snipDblQuotes(str, begin, end);
+
+	const uint32_t size = end - begin;
+	char* result = new char[size + 1];
+	result[size] = NULL;
+	memcpy(result, begin, size);
+
+	return result;
 }
 
 char* eatWhitespace(char* str)
@@ -257,7 +388,9 @@ Token getToken(char * str)
 					if (*itr == NULL)
 					{
 						std::cerr << "Reached End of file. Missing closing \" for string literal." << std::endl;
-						exit(1);
+						t.str = nullptr;
+						t.length = 0;
+						return t;
 					}
 				}
 				t.length++;
@@ -291,6 +424,7 @@ Token getToken(char * str)
 				else if (isdigit(*itr) || *itr == '-')
 				{
 					t.type = Token::NUMBER;
+					t.str = itr;
 
 					while (isdigit(*itr) || *itr == '-' || *itr == 'e' || *itr == '.')
 					{
