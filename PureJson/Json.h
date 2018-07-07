@@ -40,5 +40,18 @@ EXTERN_C PUREJSON_LIB_API const char* pj_arrayGetString(pj_Array* array, size_t 
 EXTERN_C PUREJSON_LIB_API pj_Array* pj_arrayGetArray(pj_Array* array, size_t index);
 EXTERN_C PUREJSON_LIB_API pj_Object* pj_arrayGetObj(pj_Array* array, size_t index);
 
+EXTERN_C PUREJSON_LIB_API void pj_arrayAddNum(pj_Array* array, double num);
+EXTERN_C PUREJSON_LIB_API void pj_arrayAddBool(pj_Array* array, pj_boolean boolean);
+EXTERN_C PUREJSON_LIB_API void pj_arrayAddString(pj_Array* array, const char* str);
+EXTERN_C PUREJSON_LIB_API void pj_arrayAddArray(pj_Array* array, pj_Array* other);
+EXTERN_C PUREJSON_LIB_API void pj_arrayAddObj(pj_Array* array, pj_Object* obj);
+
+EXTERN_C PUREJSON_LIB_API void pj_objAddNum(pj_Object* obj, const char* propName, double num);
+EXTERN_C PUREJSON_LIB_API void pj_objAddBool(pj_Object* obj, const char* propName, pj_boolean boolean);
+EXTERN_C PUREJSON_LIB_API void pj_objAddString(pj_Object* obj, const char* propName, const char* str);
+EXTERN_C PUREJSON_LIB_API void pj_objAddArray(pj_Object* obj, const char* propName, pj_Array* array);
+EXTERN_C PUREJSON_LIB_API void pj_objAddObj(pj_Object* obj, const char* propName, pj_Object* other);
+
 EXTERN_C PUREJSON_LIB_API pj_ValueType pj_getPropType(pj_Object* obj, const char* propName);
 EXTERN_C PUREJSON_LIB_API pj_ValueType pj_getArrayElemType(pj_Array* array, size_t index);
+
