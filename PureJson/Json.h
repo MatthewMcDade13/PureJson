@@ -10,6 +10,42 @@ typedef int pj_boolean;
 struct pj_Object;
 struct pj_Array;
 
+#if defined(__cplusplus)
+namespace pj
+{
+	struct PUREJSON_LIB_API ObjectRoot
+	{
+		pj_Object* handle;
+
+		ObjectRoot(pj_Object* handle);
+
+		ObjectRoot(ObjectRoot& other) = delete;
+		ObjectRoot(ObjectRoot&& other);
+
+		~ObjectRoot();
+
+		ObjectRoot& operator=(ObjectRoot& other) = delete;
+		ObjectRoot& operator=(ObjectRoot&& other);
+
+	};
+
+	struct PUREJSON_LIB_API ArrayRoot
+	{
+		pj_Array* handle;
+
+		ArrayRoot(pj_Array* handle);
+
+		ArrayRoot(ArrayRoot& other) = delete;
+		ArrayRoot(ArrayRoot&& other);
+
+		~ArrayRoot();
+
+		ArrayRoot& operator=(ArrayRoot& other) = delete;
+		ArrayRoot& operator=(ArrayRoot&& other);
+	};
+}
+#endif 
+
 enum pj_ValueType
 {
 	PJ_VALUE_NUMBER,

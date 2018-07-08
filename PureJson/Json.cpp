@@ -14,8 +14,6 @@
 // TODO: Implement Error Handling (preferably don't want to crash if json is invalid or
 // user attempts to get value from property that does not exist.
 
-#define RETURN_JSON_VALUE()
-
 struct JsonVal
 {
 	pj_ValueType type;
@@ -613,3 +611,48 @@ JsonProp* findProp(pj_Object& obj, const char* propName)
 	return &itr->second;
 }
 
+pj::ObjectRoot::ObjectRoot(pj_Object * handle): handle(handle) { }
+pj::ObjectRoot::~ObjectRoot() { 
+	pj_deleteObj(handle); 
+}
+
+pj::ObjectRoot::ObjectRoot(pj::ObjectRoot && other)
+{
+	handle = other.handle;
+	other.handle = nullptr;
+}
+
+pj::ObjectRoot & pj::ObjectRoot::operator=(pj::ObjectRoot && other)
+{
+	if (this != &other)
+	{
+		pj_deleteObj(handle);
+		handle = other.handle;
+		other.handle = nullptr;
+	}
+
+	return *this;
+}
+
+pj::ArrayRoot::ArrayRoot(pj_Array * handle): handle(handle) { }
+pj::ArrayRoot::~ArrayRoot() { 
+	pj_deleteArray(handle); 
+}
+
+pj::ArrayRoot::ArrayRoot(pj::ArrayRoot && other)
+{
+	handle = other.handle;
+	other.handle = nullptr;
+}
+
+pj::ArrayRoot & pj::ArrayRoot::operator=(pj::ArrayRoot && other)
+{
+	if (this != &other)
+	{
+		pj_deleteArray(handle);
+		handle = other.handle;
+		other.handle = nullptr;
+	}
+
+	return *this;
+}
