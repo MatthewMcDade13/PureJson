@@ -9,16 +9,12 @@
 #include <string>
 
 // TODO: Verify no memory leaks!!
+// TODO: Printing JSON back to string
+// TODO: Outputting JSON to file
 // TODO: Implement Error Handling (preferably don't want to crash if json is invalid or
 // user attempts to get value from property that does not exist.
 
-static void parseJSONObject(Cursor& cursor, pj_Object* json);
-static void parseJSONArray(Cursor& cursor, pj_Array* array);
-static bool parseJSONValue(Cursor& cursor, Token& valueToken, struct JsonVal& val);
-static void addArrayValue(pj_Array& array, JsonVal&& val);
-static char* cpyStringDynamic(const char* str);
-
-static struct JsonProp* findProp(pj_Object& obj, const char* propName);
+#define RETURN_JSON_VALUE()
 
 struct JsonVal
 {
@@ -122,6 +118,61 @@ struct pj_Object
 	std::unordered_map<std::string, JsonProp> data;
 };
 
+template <typename T, pj_ValueType valType>
+T getValueOfType(JsonVal& val, T failVal)
+{
+	if (val.type != valType) return failVal;
+
+	if constexpr (valType == PJ_VALUE_NUMBER)
+		return val.num;
+	else if constexpr (valType == PJ_VALUE_STRING)
+		return val.string;
+	else if constexpr (valType == PJ_VALUE_BOOL)
+		return val.boolean;
+	else if constexpr (valType == PJ_VALUE_OBJ)
+		return val.obj;
+	else if constexpr (valType == PJ_VALUE_ARRAY)
+		return val.array;
+	else if constexpr (valType == PJ_VALUE_NULL)
+		return failVal;
+}
+
+template<typename T, pj_ValueType valType>
+T getObjectValue(pj_Object* json, const char* propName, T failVal = 0)
+{
+	if (JsonProp* prop = findProp(*json, propName))
+	{
+		if (prop->val.type == PJ_VALUE_NULL) return failVal;
+
+		assert(prop->val.type == valType);
+
+		return getValueOfType<T, valType>(prop->val, failVal);
+	}
+
+	return failVal;
+}
+
+template<typename T, pj_ValueType valType>
+T getArrayValue(pj_Array* array, size_t index, T failVal = 0)
+{
+	assert(index >= 0 && index < array->size);
+
+	JsonVal& val = array->items[index];
+
+	if (val.type == PJ_VALUE_NULL) return failVal;
+
+	assert(val.type == valType);
+
+	return getValueOfType<T, valType>(val, failVal);
+}
+
+static void parseJSONObject(Cursor& cursor, pj_Object* json);
+static void parseJSONArray(Cursor& cursor, pj_Array* array);
+static bool parseJSONValue(Cursor& cursor, Token& valueToken, struct JsonVal& val);
+static void addArrayValue(pj_Array& array, struct JsonVal&& val);
+
+static struct JsonProp* findProp(pj_Object& obj, const char* propName);
+
 EXTERN_C pj_Object * pj_parseObj(const char * raw)
 {
 	pj_Object* json = pj_createObj();
@@ -188,87 +239,52 @@ EXTERN_C void pj_deleteArray(pj_Array * array)
 
 EXTERN_C double pj_objGetNum(pj_Object * json, const char * propName)
 {
-	JsonProp* prop = findProp(*json, propName);
-	assert(prop->val.type == PJ_VALUE_NUMBER);
-
-	return prop->val.num;
+	return getObjectValue<double, PJ_VALUE_NUMBER>(json, propName);
 }
 
 EXTERN_C pj_boolean pj_objGetBool(pj_Object * json, const char * propName)
 {
-	JsonProp* prop = findProp(*json, propName);
-	assert(prop->val.type == PJ_VALUE_BOOL);
-
-	return prop->val.boolean;
+	return getObjectValue<pj_boolean, PJ_VALUE_BOOL>(json, propName);
 }
 
 EXTERN_C const char* pj_objGetString(pj_Object * json, const char * propName)
 {
-	JsonProp* prop = findProp(*json, propName);
-	assert(prop->val.type == PJ_VALUE_STRING);
-
-	return prop->val.string;
+	return getObjectValue<const char*, PJ_VALUE_STRING>(json, propName);
 }
 
 EXTERN_C pj_Array* pj_objGetArray(pj_Object * json, const char * propName)
 {
-	JsonProp* prop = findProp(*json, propName);
-	assert(prop->val.type == PJ_VALUE_ARRAY);
-
-	return prop->val.array;
+	return getObjectValue<pj_Array*, PJ_VALUE_ARRAY>(json, propName);
 }
 
 EXTERN_C pj_Object* pj_objGetObj(pj_Object * json, const char * propName)
 {
-	JsonProp* prop = findProp(*json, propName);
-	assert(prop->val.type == PJ_VALUE_OBJ);
-
-	return prop->val.obj;
+	return getObjectValue<pj_Object*, PJ_VALUE_OBJ>(json, propName);
 }
 
 EXTERN_C double pj_arrayGetNum(pj_Array * array, size_t index)
 {
-	assert(index >= 0 && index <= array->size);
-	JsonVal& val = array->items[index];
-
-	assert(val.type == PJ_VALUE_NUMBER);
-	return val.num;
+	return getArrayValue<double, PJ_VALUE_NUMBER>(array, index);
 }
 
 EXTERN_C pj_boolean pj_arrayGetBool(pj_Array * array, size_t index)
 {
-	assert(index >= 0 && index <= array->size);
-	JsonVal& val = array->items[index];
-
-	assert(val.type == PJ_VALUE_BOOL);
-	return val.boolean;
+	return getArrayValue<pj_boolean, PJ_VALUE_BOOL>(array, index);
 }
 
-EXTERN_C const char * pj_arrayGetString(pj_Array * array, size_t index)
+EXTERN_C const char* pj_arrayGetString(pj_Array * array, size_t index)
 {
-	assert(index >= 0 && index <= array->size);
-	JsonVal& val = array->items[index];
-
-	assert(val.type == PJ_VALUE_STRING);
-	return val.string;
+	return getArrayValue<const char*, PJ_VALUE_STRING>(array, index);
 }
 
 EXTERN_C pj_Array * pj_arrayGetArray(pj_Array * array, size_t index)
 {
-	assert(index >= 0 && index <= array->size);
-	JsonVal& val = array->items[index];
-
-	assert(val.type == PJ_VALUE_ARRAY);
-	return val.array;
+	return getArrayValue<pj_Array*, PJ_VALUE_ARRAY>(array, index);
 }
 
 EXTERN_C pj_Object * pj_arrayGetObj(pj_Array * array, size_t index)
 {
-	assert(index >= 0 && index <= array->size);
-	JsonVal& val = array->items[index];
-
-	assert(val.type == PJ_VALUE_OBJ);
-	return val.obj;
+	return getArrayValue<pj_Object*, PJ_VALUE_OBJ>(array, index);
 }
 
 EXTERN_C void pj_arrayAddNum(pj_Array * array, double num)
@@ -285,7 +301,12 @@ EXTERN_C void pj_arrayAddNum(pj_Array * array, double num)
 EXTERN_C void pj_arrayAddBool(pj_Array * array, pj_boolean boolean)
 {
 	assert(array != nullptr);
-	return void();
+
+	JsonVal val;
+	val.type = PJ_VALUE_BOOL;
+	val.boolean = boolean;
+
+	addArrayValue(*array, std::move(val));
 }
 
 EXTERN_C void pj_arrayAddString(pj_Array * array, const char * str)
@@ -321,27 +342,37 @@ EXTERN_C void pj_arrayAddObj(pj_Array * array, pj_Object * obj)
 	addArrayValue(*array, std::move(val));
 }
 
-EXTERN_C void pj_objAddNum(pj_Object * obj, const char * propName, double num)
+EXTERN_C void pj_arrayAddNull(pj_Array * array)
+{
+	assert(array != nullptr);
+
+	JsonVal val;
+	val.type = PJ_VALUE_NULL;
+
+	addArrayValue(*array, std::move(val));
+}
+
+EXTERN_C void pj_objSetNum(pj_Object * obj, const char * propName, double num)
 {
 	JsonProp prop;
 	prop.name = propName;
 	prop.val.type = PJ_VALUE_NUMBER;
 	prop.val.num = num;
 
-	obj->data.emplace(propName, std::move(prop));
+	obj->data[propName] = std::move(prop);
 }
 
-EXTERN_C void pj_objAddBool(pj_Object * obj, const char * propName, pj_boolean boolean)
+EXTERN_C void pj_objSetBool(pj_Object * obj, const char * propName, pj_boolean boolean)
 {
 	JsonProp prop;
 	prop.name = propName;
 	prop.val.type = PJ_VALUE_BOOL;
 	prop.val.boolean = boolean;
 
-	obj->data.emplace(propName, std::move(prop));
+	obj->data[propName] = std::move(prop);
 }
 
-EXTERN_C void pj_objAddString(pj_Object * obj, const char * propName, const char * str)
+EXTERN_C void pj_objSetString(pj_Object * obj, const char * propName, const char * str)
 {
 	JsonProp prop;
 	prop.name = propName;
@@ -349,32 +380,42 @@ EXTERN_C void pj_objAddString(pj_Object * obj, const char * propName, const char
 
 	prop.val.string = cpyStringDynamic(str);
 
-	obj->data.emplace(propName, std::move(prop));
+	obj->data[propName] = std::move(prop);
 }
 
-EXTERN_C void pj_objAddArray(pj_Object * obj, const char * propName, pj_Array * array)
+EXTERN_C void pj_objSetArray(pj_Object * obj, const char * propName, pj_Array * array)
 {
 	JsonProp prop;
 	prop.name = propName;
 	prop.val.type = PJ_VALUE_ARRAY;
 	prop.val.array = array;
 
-	obj->data.emplace(propName, std::move(prop));
+	obj->data[propName] = std::move(prop);
 }
 
-EXTERN_C void pj_objAddObj(pj_Object * obj, const char * propName, pj_Object * other)
+EXTERN_C void pj_objSetObj(pj_Object * obj, const char * propName, pj_Object * other)
 {
 	JsonProp prop;
 	prop.name = propName;
 	prop.val.type = PJ_VALUE_OBJ;
 	prop.val.obj = other;
 
-	obj->data.emplace(propName, std::move(prop));
+	obj->data[propName] = std::move(prop);
+}
+
+EXTERN_C void pj_objSetNull(pj_Object * obj, const char * propName)
+{
+	JsonProp prop;
+	prop.name = propName;
+	prop.val.type = PJ_VALUE_NULL;
+
+	obj->data[propName] = std::move(prop);
 }
 
 
-EXTERN_C pj_ValueType pj_getPropType(pj_Object * obj, const char * propName)
+EXTERN_C pj_ValueType pj_getObjPropType(pj_Object * obj, const char * propName)
 {
+	assert(obj != nullptr);
 	JsonProp& prop = obj->data[std::string(propName)];
 
 	return prop.val.type;
@@ -385,6 +426,33 @@ EXTERN_C pj_ValueType pj_getArrayElemType(pj_Array * array, size_t index)
 	assert(index >= 0 && index <= array->size);
 	JsonVal& val = array->items[index];
 	return val.type;
+}
+
+EXTERN_C pj_boolean pj_isArrayElemOfType(pj_Array * array, size_t index, pj_ValueType type)
+{
+	assert(index > 0 && index < array->size);
+	return array->items[index].type == type;
+}
+
+EXTERN_C pj_boolean pj_isObjPropOfType(pj_Object * obj, const char * propName, pj_ValueType type)
+{
+	if (JsonProp* prop = findProp(*obj, propName))
+	{
+		return prop->val.type == type;
+	}
+
+	return false;
+}
+
+EXTERN_C void pj_objForEachKey(pj_Object * obj, void(*callback)(pj_Object*, const char *))
+{
+	for (auto& kv : obj->data)
+		callback(obj, kv.first.c_str());
+}
+
+EXTERN_C size_t pj_getArraySize(pj_Array* array)
+{
+	return array->size;
 }
 
 
@@ -495,6 +563,9 @@ bool parseJSONValue(Cursor & cursor, Token & valueToken, JsonVal & val)
 			val.type = PJ_VALUE_STRING;
 			val.string = parseCString(valueToken.str);
 		break;
+		case Token::JSON_NULL:
+			val.type = PJ_VALUE_NULL;
+		break;
 		case Token::SQUARE_BRACKET_OPEN:
 			val.type = PJ_VALUE_ARRAY;
 			val.array = pj_createArray();
@@ -532,15 +603,6 @@ void addArrayValue(pj_Array & array, JsonVal && val)
 	array.items[newSize - 1] = std::move(val);
 	array.size = newSize;
 	array.capacity = newSize;
-}
-
-char * cpyStringDynamic(const char * str)
-{
-	const uint32_t stringLen = strlen(str);
-	char* result = new char[stringLen + 1]();
-	strcpy(result, str);
-
-	return result;
 }
 
 JsonProp* findProp(pj_Object& obj, const char* propName)

@@ -58,3 +58,14 @@ bool cmpSubStr(const char * a, const char * b, size_t length)
 }
 
 
+char * cpyStringDynamic(const char * str)
+{
+	const uint32_t stringLen = strlen(str);
+	char* result = new char[stringLen + 1]();
+	strcpy(result, str);
+
+	return result;
+}
+
+
+
