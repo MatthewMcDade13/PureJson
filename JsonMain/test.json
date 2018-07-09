@@ -3,6 +3,12 @@
   "prop2": 123.568,
   "prop3": {
     "name": "john ayylmao",
-    "age":  69
-  }
+    "age": 69
+  },
+  "prop4": [
+    "pepe",
+    "is",
+    "love"
+  ],
+  "prop5": null
 }

@@ -1,0 +1,16 @@
+{
+    "prop": false,
+    "prop2": 123.568000,
+    "prop3": {
+        "name": "john ayylmao",
+        "age": 69.000000
+    },
+    "itsnullfam": null,
+    "prop4": [
+        "pepe",
+        "is",
+        "love",
+        null
+    ],
+    "prop5": null
+}
