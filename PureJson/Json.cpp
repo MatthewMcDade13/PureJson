@@ -14,6 +14,8 @@
 // TODO: Implement Error Handling (preferably don't want to crash if json is invalid or
 // user attempts to get value from property that does not exist.
 
+static constexpr const char* INDENT = "    ";
+
 struct JsonVal
 {
 	pj_ValueType type;
@@ -166,7 +168,12 @@ T getArrayValue(pj_Array* array, size_t index, T failVal = 0)
 
 static void parseJSONObject(Cursor& cursor, pj_Object* json);
 static void parseJSONArray(Cursor& cursor, pj_Array* array);
-static bool parseJSONValue(Cursor& cursor, Token& valueToken, struct JsonVal& val);
+static bool parseJSONValue(Cursor& cursor, Token& valueToken, JsonVal& val);
+static char* objectToString(pj_Object* obj, int depth, pj_boolean isPretty);
+static char* arrayToString(pj_Array* array, int depth, pj_boolean isPretty);
+static char* valueToString(JsonVal& val, int depth, pj_boolean isPretty);
+static pj_boolean writeToFile(const char* fileName, char* str);
+
 static void addArrayValue(pj_Array& array, struct JsonVal&& val);
 
 static struct JsonProp* findProp(pj_Object& obj, const char* propName);
@@ -206,6 +213,28 @@ EXTERN_C pj_Array * pj_parseArray(const char * raw)
 
 }
 
+EXTERN_C char * pj_arrayToString(pj_Array * array, pj_boolean isPretty)
+{
+	return arrayToString(array, 0, isPretty);
+}
+
+EXTERN_C pj_boolean pj_arrayToFile(pj_Array * array, pj_boolean isPretty, const char* fileName)
+{
+	pj::String stringified = pj_arrayToString(array, isPretty);
+	return writeToFile(fileName, stringified.handle);
+}
+
+EXTERN_C char * pj_objToString(pj_Object* obj, pj_boolean isPretty)
+{
+	return objectToString(obj, 0, isPretty);
+}
+
+EXTERN_C pj_boolean pj_objToFile(pj_Object* obj, pj_boolean isPretty, const char* fileName)
+{
+	pj::String stringified = pj_objToString(obj, isPretty);
+	return writeToFile(fileName, stringified.handle);
+}
+
 EXTERN_C pj_Object * pj_createObj()
 {
 	return new pj_Object();
@@ -233,6 +262,11 @@ EXTERN_C void pj_deleteArray(pj_Array * array)
 		delete[] array->items;
 		delete array;
 	}
+}
+
+EXTERN_C void pj_deleteString(char * jsonString)
+{
+	delete[] jsonString;
 }
 
 EXTERN_C double pj_objGetNum(pj_Object * json, const char * propName)
@@ -414,9 +448,13 @@ EXTERN_C void pj_objSetNull(pj_Object * obj, const char * propName)
 EXTERN_C pj_ValueType pj_getObjPropType(pj_Object * obj, const char * propName)
 {
 	assert(obj != nullptr);
-	JsonProp& prop = obj->data[std::string(propName)];
 
-	return prop.val.type;
+	if (JsonProp* prop = findProp(*obj, propName))
+	{
+		return prop->val.type;
+	}
+
+	return PJ_VALUE_NULL;
 }
 
 EXTERN_C pj_ValueType pj_getArrayElemType(pj_Array * array, size_t index)
@@ -582,6 +620,135 @@ bool parseJSONValue(Cursor & cursor, Token & valueToken, JsonVal & val)
 	return true;
 }
 
+char * objectToString(pj_Object * obj, int depth, pj_boolean isPretty)
+{
+	char* result = new char[3]();
+
+	result[0] = '{';
+	if (isPretty) result[1] = '\n';
+
+	const size_t objSize = obj->data.size();
+	int current = -1;
+
+	for (auto& kv : obj->data)
+	{
+		if (isPretty)
+		{
+			for (int i = 0; i < depth + 1; i++)
+				moveConcatString(result, INDENT);
+		}
+
+		moveConcatPropName(result, kv.first.c_str());
+
+		moveConcatString(result, valueToString(kv.second.val, depth, isPretty));
+		const bool isLast = ++current == objSize - 1;
+
+		if (!isLast)
+		{
+			moveConcatString(result, ",");
+			if (isPretty) moveConcatString(result, "\n");
+		}
+	}
+
+	if (isPretty)
+	{
+		moveConcatString(result, "\n");
+		for (int i = 0; i < depth; i++)
+			moveConcatString(result, INDENT);
+	}
+
+	moveConcatString(result, "}");
+
+	return result;
+}
+
+char * arrayToString(pj_Array * array, int depth, pj_boolean isPretty)
+{
+	char* result = new char[3]();
+
+	result[0] = '[';
+	if (isPretty) result[1] = '\n';
+
+	for (size_t i = 0; i < array->size; i++)
+	{
+		if (isPretty)
+		{
+			for (int i = 0; i < depth + 1; i++)
+				moveConcatString(result, INDENT);
+		}
+
+		moveConcatString(result, valueToString(array->items[i], depth, isPretty));
+
+		const bool isLast = i == array->size - 1;
+
+		if (!isLast)
+		{
+			moveConcatString(result, ",");
+			if (isPretty) moveConcatString(result, "\n");
+		}
+	}
+
+	if (isPretty)
+	{
+		moveConcatString(result, "\n");
+		for (int i = 0; i < depth; i++)
+			moveConcatString(result, INDENT);
+	}
+
+	moveConcatString(result, "]");
+
+	return result;
+}
+
+char * valueToString(JsonVal & val, int depth, pj_boolean isPretty)
+{
+	char* result = new char();
+
+	switch (val.type)
+	{
+		case PJ_VALUE_NUMBER:
+			char numBuffer[255];
+			snprintf(numBuffer, 255, "%f", val.num);
+			moveConcatString(result, numBuffer);
+		break;
+		case PJ_VALUE_STRING:
+			moveConcatStringLiteral(result, val.string);
+		break;
+		case PJ_VALUE_BOOL:
+			if (val.boolean)
+				moveConcatString(result, "true");
+			else
+				moveConcatString(result, "false");
+		break;
+		case PJ_VALUE_OBJ:
+			moveConcatString(result, objectToString(val.obj, depth + 1, isPretty));
+		break;
+		case PJ_VALUE_ARRAY:
+			moveConcatString(result, arrayToString(val.array, depth + 1, isPretty));
+		break;
+		case PJ_VALUE_NULL:
+			moveConcatString(result, "null");
+		break;
+	}
+
+	return result;
+}
+
+pj_boolean writeToFile(const char* fileName, char * str)
+{
+	FILE* file = fopen(fileName, "w");
+	if (file == NULL)
+	{
+		std::cerr << "Cannot open file: " << fileName << std::endl;
+		fclose(file);
+		return false;
+	}
+
+	fprintf(file, "%s", str);
+	fclose(file);
+	return true;
+}
+
 void addArrayValue(pj_Array & array, JsonVal && val)
 {
 	const size_t newSize = array.size + 1;
@@ -611,22 +778,33 @@ JsonProp* findProp(pj_Object& obj, const char* propName)
 	return &itr->second;
 }
 
-pj::ObjectRoot::ObjectRoot(pj_Object * handle): handle(handle) { }
-pj::ObjectRoot::~ObjectRoot() { 
-	pj_deleteObj(handle); 
-}
+static void freeHandle(pj_Array* arr) { pj_deleteArray(arr); }
+static void freeHandle(pj_Object* obj) { pj_deleteObj(obj); }
+static void freeHandle(char* str) { pj_deleteString(str); }
 
-pj::ObjectRoot::ObjectRoot(pj::ObjectRoot && other)
+template struct pj::Handle<pj_Array>;
+template struct pj::Handle<pj_Object>;
+template struct pj::Handle<char>;
+
+template<typename T>
+pj::Handle<T>::Handle(T* handle): handle(handle) { }
+
+template<typename T>
+pj::Handle<T>::~Handle() { freeHandle(handle); }
+
+template<typename T>
+pj::Handle<T>::Handle(pj::Handle<T>&& other)
 {
 	handle = other.handle;
 	other.handle = nullptr;
 }
 
-pj::ObjectRoot & pj::ObjectRoot::operator=(pj::ObjectRoot && other)
+template<typename T>
+pj::Handle<T>& pj::Handle<T>::operator=(pj::Handle<T>&& other)
 {
 	if (this != &other)
 	{
-		pj_deleteObj(handle);
+		freeHandle(handle);
 		handle = other.handle;
 		other.handle = nullptr;
 	}
@@ -634,25 +812,3 @@ pj::ObjectRoot & pj::ObjectRoot::operator=(pj::ObjectRoot && other)
 	return *this;
 }
 
-pj::ArrayRoot::ArrayRoot(pj_Array * handle): handle(handle) { }
-pj::ArrayRoot::~ArrayRoot() { 
-	pj_deleteArray(handle); 
-}
-
-pj::ArrayRoot::ArrayRoot(pj::ArrayRoot && other)
-{
-	handle = other.handle;
-	other.handle = nullptr;
-}
-
-pj::ArrayRoot & pj::ArrayRoot::operator=(pj::ArrayRoot && other)
-{
-	if (this != &other)
-	{
-		pj_deleteArray(handle);
-		handle = other.handle;
-		other.handle = nullptr;
-	}
-
-	return *this;
-}

@@ -47,11 +47,11 @@ char * parseCString(const char * str)
 }
 
 
-bool cmpSubStr(const char * a, const char * b, size_t length)
+bool cmpSubStr(const char * left, const char * right, size_t length)
 {
 	for (size_t i = 0; i < length; i++)
 	{
-		if (a[i] != b[i]) return false;
+		if (left[i] != right[i]) return false;
 	}
 
 	return true;
@@ -65,6 +65,53 @@ char * cpyStringDynamic(const char * str)
 	strcpy(result, str);
 
 	return result;
+}
+
+char * concatString(const char * left, const char * right)
+{
+	const size_t resultSize = strlen(left) + strlen(right);
+
+	char* result = new char[resultSize + 1]();
+
+	strcpy(result, left);
+	strcat(result, right);
+
+	return result;
+}
+
+void moveConcatString(char *& left, const char * right)
+{
+	char* result = concatString(left, right);
+	delete[] left;
+	left = result;
+}
+
+void moveConcatPropName(char *& left, const char * propName)
+{
+	constexpr const char* propEnd = "\": ";
+	constexpr size_t endSize = sizeof(propEnd - 1);
+
+	const size_t nameSize = strlen(propName);
+
+	char* result = new char[nameSize + endSize + 2]();
+	result[0] = '"';
+	strcpy(result + 1, propName);
+	strcpy(result + nameSize + 1, propEnd);
+
+	moveConcatString(left, result);
+}
+
+void moveConcatStringLiteral(char *& left, const char * stringVal)
+{
+	const size_t strSize = strlen(stringVal);
+	char* result = new char[strSize + 3]();
+	result[0] = '"';
+
+	strncpy(result + 1, stringVal, strSize);
+
+	result[strSize + 1] = '"';
+
+	moveConcatString(left, result);
 }
 
 

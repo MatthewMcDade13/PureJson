@@ -13,36 +13,25 @@ struct pj_Array;
 #if defined(__cplusplus)
 namespace pj
 {
-	struct PUREJSON_LIB_API ObjectRoot
+	template<typename T>
+	struct PUREJSON_LIB_API Handle
 	{
-		pj_Object* handle;
+		T* handle;
 
-		ObjectRoot(pj_Object* handle);
+		Handle(T* handle);
 
-		ObjectRoot(ObjectRoot& other) = delete;
-		ObjectRoot(ObjectRoot&& other);
+		Handle(Handle& other) = delete;
+		Handle(Handle&& other);
 
-		~ObjectRoot();
+		~Handle();
 
-		ObjectRoot& operator=(ObjectRoot& other) = delete;
-		ObjectRoot& operator=(ObjectRoot&& other);
-
+		Handle& operator=(Handle& other) = delete;
+		Handle& operator=(Handle&& other);
 	};
 
-	struct PUREJSON_LIB_API ArrayRoot
-	{
-		pj_Array* handle;
-
-		ArrayRoot(pj_Array* handle);
-
-		ArrayRoot(ArrayRoot& other) = delete;
-		ArrayRoot(ArrayRoot&& other);
-
-		~ArrayRoot();
-
-		ArrayRoot& operator=(ArrayRoot& other) = delete;
-		ArrayRoot& operator=(ArrayRoot&& other);
-	};
+	using ObjectRoot = Handle<pj_Object>;
+	using ArrayRoot = Handle<pj_Array>;
+	using String = Handle<char>;
 }
 #endif 
 
@@ -64,9 +53,16 @@ EXTERN_C PUREJSON_LIB_API void pj_deleteObj(pj_Object* json);
 EXTERN_C PUREJSON_LIB_API pj_Array* pj_createArray();
 EXTERN_C PUREJSON_LIB_API void pj_deleteArray(pj_Array* array);
 
+EXTERN_C PUREJSON_LIB_API void pj_deleteString(char* jsonString);
+
 /* Object/Array Parsers */
 EXTERN_C PUREJSON_LIB_API pj_Object* pj_parseObj(const char* raw);
 EXTERN_C PUREJSON_LIB_API pj_Array* pj_parseArray(const char* raw);
+
+EXTERN_C PUREJSON_LIB_API char* pj_arrayToString(pj_Array* array, pj_boolean isPretty);
+EXTERN_C PUREJSON_LIB_API pj_boolean pj_arrayToFile(pj_Array* array, pj_boolean isPretty, const char* fileName);
+EXTERN_C PUREJSON_LIB_API char* pj_objToString(pj_Object* obj, pj_boolean isPretty);
+EXTERN_C PUREJSON_LIB_API pj_boolean pj_objToFile(pj_Object* obj, pj_boolean isPretty, const char* fileName);
 
 /* Object Get */
 EXTERN_C PUREJSON_LIB_API double pj_objGetNum(pj_Object* json, const char* propName);
@@ -106,5 +102,5 @@ EXTERN_C PUREJSON_LIB_API pj_boolean pj_isObjPropOfType(pj_Object* obj, const ch
 
 /* Iteration */
 EXTERN_C PUREJSON_LIB_API void pj_objForEachKey(pj_Object* obj, void(*callback)(pj_Object*, const char*));
-
 EXTERN_C PUREJSON_LIB_API size_t pj_getArraySize(pj_Array* array);
+
