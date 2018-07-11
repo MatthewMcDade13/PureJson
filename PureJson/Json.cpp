@@ -4,9 +4,10 @@
 #include "Tokenizer.h"
 #include <unordered_map>
 #include <cctype>
-#include <assert.h>
+#include <cassert>
 #include <iostream>
 #include <string>
+#include <cstring>
 
 // TODO: Verify no memory leaks!!
 // TODO: Printing JSON back to string
@@ -15,6 +16,7 @@
 // user attempts to get value from property that does not exist.
 
 static constexpr const char* INDENT = "    ";
+
 
 struct JsonVal
 {
@@ -30,7 +32,7 @@ struct JsonVal
 	};
 
 	JsonVal() = default;
-	JsonVal(JsonVal& other) = delete;
+	JsonVal(const JsonVal& other) = delete;
 	JsonVal operator=(JsonVal& other) = delete;
 
 	JsonVal& operator=(JsonVal&& other)
@@ -118,6 +120,18 @@ struct pj_Object
 	std::unordered_map<std::string, JsonProp> data;
 };
 
+static void parseJSONObject(Cursor& cursor, pj_Object* json);
+static void parseJSONArray(Cursor& cursor, pj_Array* array);
+static bool parseJSONValue(Cursor& cursor, Token& valueToken, JsonVal& val);
+static char* objectToString(pj_Object* obj, int depth, pj_boolean isPretty);
+static char* arrayToString(pj_Array* array, int depth, pj_boolean isPretty);
+static char* valueToString(JsonVal& val, int depth, pj_boolean isPretty);
+static pj_boolean writeToFile(const char* fileName, char* str);
+
+static void addArrayValue(pj_Array& array, struct JsonVal&& val);
+
+static struct JsonProp* findProp(pj_Object& obj, const char* propName);
+
 template <typename T, pj_ValueType valType>
 T getValueOfType(JsonVal& val, T failVal)
 {
@@ -165,18 +179,6 @@ T getArrayValue(pj_Array* array, size_t index, T failVal = 0)
 
 	return getValueOfType<T, valType>(val, failVal);
 }
-
-static void parseJSONObject(Cursor& cursor, pj_Object* json);
-static void parseJSONArray(Cursor& cursor, pj_Array* array);
-static bool parseJSONValue(Cursor& cursor, Token& valueToken, JsonVal& val);
-static char* objectToString(pj_Object* obj, int depth, pj_boolean isPretty);
-static char* arrayToString(pj_Array* array, int depth, pj_boolean isPretty);
-static char* valueToString(JsonVal& val, int depth, pj_boolean isPretty);
-static pj_boolean writeToFile(const char* fileName, char* str);
-
-static void addArrayValue(pj_Array& array, struct JsonVal&& val);
-
-static struct JsonProp* findProp(pj_Object& obj, const char* propName);
 
 EXTERN_C pj_Object * pj_parseObj(const char * raw)
 {
@@ -793,14 +795,14 @@ template<typename T>
 pj::Handle<T>::~Handle() { freeHandle(handle); }
 
 template<typename T>
-pj::Handle<T>::Handle(pj::Handle<T>&& other)
+pj::Handle<T>::Handle(pj::Handle<T>&& other) noexcept
 {
 	handle = other.handle;
 	other.handle = nullptr;
 }
 
 template<typename T>
-pj::Handle<T>& pj::Handle<T>::operator=(pj::Handle<T>&& other)
+pj::Handle<T>& pj::Handle<T>::operator=(pj::Handle<T>&& other) noexcept
 {
 	if (this != &other)
 	{

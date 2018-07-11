@@ -1,5 +1,7 @@
 #include "Util.h"
 #include <iostream>
+#include <cstdlib>
+#include <cstring>
 
 void snipDblQuotes(const char* str, const char *& begin, const char *& end)
 {

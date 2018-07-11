@@ -1,4 +1,6 @@
 #pragma once
+
+#include <cstddef>
 #include "Define.h"
 
 #if defined(__cplusplus)
@@ -21,12 +23,12 @@ namespace pj
 		Handle(T* handle);
 
 		Handle(Handle& other) = delete;
-		Handle(Handle&& other);
+		Handle(Handle&& other) noexcept;
 
 		~Handle();
 
 		Handle& operator=(Handle& other) = delete;
-		Handle& operator=(Handle&& other);
+		Handle& operator=(Handle&& other) noexcept;
 	};
 
 	using ObjectRoot = Handle<pj_Object>;

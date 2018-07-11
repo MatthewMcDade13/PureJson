@@ -1,6 +1,7 @@
 #include "Tokenizer.h"
 #include "Util.h"
 #include <iostream>
+#include <cstring>
 
 static constexpr Token unknownToken()
 {
