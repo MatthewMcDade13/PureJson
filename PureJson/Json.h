@@ -1253,6 +1253,6 @@ pj::Handle<T>& pj::Handle<T>::operator=(pj::Handle<T>&& other) noexcept
 	return *this;
 }
 
-#endif
+#endif // PURE_JSON_IMPLEMENTATION
 
 #endif // PURE_JSON_H
