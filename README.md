@@ -1,5 +1,9 @@
 # Pure Json
 
+Lightweight single header C/C++ json parser. Was mainly made for educational purposes and playing around with parsing.
+If you need anything robust, this is definitely not the library for you.
+
+
 Installing
 ===========
 
