@@ -83,3 +83,5 @@ int main()
 
 }
 ```
+ There is also somewhat of a test/example in JsonMain directory
+ 
