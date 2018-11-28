@@ -26,16 +26,6 @@
 
 #include <cstddef>
 
-#if defined(_WIN32) || defined(_WIN64)
-#ifdef PUREJSON_LIB_EXPORTS  
-#define PUREJSON_LIB_API __declspec(dllexport)   
-#else  
-#define PUREJSON_LIB_API __declspec(dllimport)   
-#endif
-#else
-#define PUREJSON_LIB_API
-#endif
-
 #if defined(__cplusplus)
 #define EXTERN_C extern "C"
 #else
@@ -55,7 +45,7 @@ struct pj_Array;
 namespace pj
 {
 	template<typename T>
-	struct PUREJSON_LIB_API Handle
+	struct Handle
 	{
 		T* handle;
 
@@ -87,69 +77,73 @@ enum pj_ValueType
 };
 
 /* Object Create/Delete */
-EXTERN_C PUREJSON_LIB_API pj_Object* pj_createObj();
-EXTERN_C PUREJSON_LIB_API void pj_deleteObj(pj_Object* json);
+EXTERN_C pj_Object* pj_createObj();
+EXTERN_C void pj_deleteObj(pj_Object* json);
 
 /* Array Create/Delete */
-EXTERN_C PUREJSON_LIB_API pj_Array* pj_createArray();
-EXTERN_C PUREJSON_LIB_API void pj_deleteArray(pj_Array* array);
+EXTERN_C pj_Array* pj_createArray();
+EXTERN_C void pj_deleteArray(pj_Array* array);
 
-EXTERN_C PUREJSON_LIB_API void pj_deleteString(char* jsonString);
+EXTERN_C void pj_deleteString(char* jsonString);
 
 /* Object/Array Parsers */
-EXTERN_C PUREJSON_LIB_API pj_Object* pj_parseObj(const char* raw);
-EXTERN_C PUREJSON_LIB_API pj_Array* pj_parseArray(const char* raw);
+EXTERN_C pj_Object* pj_parseObj(const char* raw);
+EXTERN_C pj_Array* pj_parseArray(const char* raw);
 
-EXTERN_C PUREJSON_LIB_API char* pj_arrayToString(pj_Array* array, pj_boolean isPretty);
-EXTERN_C PUREJSON_LIB_API pj_boolean pj_arrayToFile(pj_Array* array, pj_boolean isPretty, const char* fileName);
-EXTERN_C PUREJSON_LIB_API char* pj_objToString(pj_Object* obj, pj_boolean isPretty);
-EXTERN_C PUREJSON_LIB_API pj_boolean pj_objToFile(pj_Object* obj, pj_boolean isPretty, const char* fileName);
+EXTERN_C char* pj_arrayToString(pj_Array* array, pj_boolean isPretty);
+EXTERN_C pj_boolean pj_arrayToFile(pj_Array* array, pj_boolean isPretty, const char* fileName);
+EXTERN_C char* pj_objToString(pj_Object* obj, pj_boolean isPretty);
+EXTERN_C pj_boolean pj_objToFile(pj_Object* obj, pj_boolean isPretty, const char* fileName);
 
 /* Object Get */
-EXTERN_C PUREJSON_LIB_API double pj_objGetNum(pj_Object* json, const char* propName);
-EXTERN_C PUREJSON_LIB_API pj_boolean pj_objGetBool(pj_Object* json, const char* propName);
-EXTERN_C PUREJSON_LIB_API const char* pj_objGetString(pj_Object* json, const char* propName);
-EXTERN_C PUREJSON_LIB_API pj_Array* pj_objGetArray(pj_Object* json, const char* propName);
-EXTERN_C PUREJSON_LIB_API pj_Object* pj_objGetObj(pj_Object* json, const char* propName);
+EXTERN_C double pj_objGetNum(pj_Object* json, const char* propName);
+EXTERN_C pj_boolean pj_objGetBool(pj_Object* json, const char* propName);
+EXTERN_C const char* pj_objGetString(pj_Object* json, const char* propName);
+EXTERN_C pj_Array* pj_objGetArray(pj_Object* json, const char* propName);
+EXTERN_C pj_Object* pj_objGetObj(pj_Object* json, const char* propName);
 
 /* Array Get */
-EXTERN_C PUREJSON_LIB_API double pj_arrayGetNum(pj_Array* array, size_t index);
-EXTERN_C PUREJSON_LIB_API pj_boolean pj_arrayGetBool(pj_Array* array, size_t index);
-EXTERN_C PUREJSON_LIB_API const char* pj_arrayGetString(pj_Array* array, size_t index);
-EXTERN_C PUREJSON_LIB_API pj_Array* pj_arrayGetArray(pj_Array* array, size_t index);
-EXTERN_C PUREJSON_LIB_API pj_Object* pj_arrayGetObj(pj_Array* array, size_t index);
+EXTERN_C double pj_arrayGetNum(pj_Array* array, size_t index);
+EXTERN_C pj_boolean pj_arrayGetBool(pj_Array* array, size_t index);
+EXTERN_C const char* pj_arrayGetString(pj_Array* array, size_t index);
+EXTERN_C pj_Array* pj_arrayGetArray(pj_Array* array, size_t index);
+EXTERN_C pj_Object* pj_arrayGetObj(pj_Array* array, size_t index);
 
 /* Array Add */
-EXTERN_C PUREJSON_LIB_API void pj_arrayAddNum(pj_Array* array, double num);
-EXTERN_C PUREJSON_LIB_API void pj_arrayAddBool(pj_Array* array, pj_boolean boolean);
-EXTERN_C PUREJSON_LIB_API void pj_arrayAddString(pj_Array* array, const char* str);
-EXTERN_C PUREJSON_LIB_API void pj_arrayAddArray(pj_Array* array, pj_Array* other);
-EXTERN_C PUREJSON_LIB_API void pj_arrayAddObj(pj_Array* array, pj_Object* obj);
-EXTERN_C PUREJSON_LIB_API void pj_arrayAddNull(pj_Array* array);
+EXTERN_C void pj_arrayAddNum(pj_Array* array, double num);
+EXTERN_C void pj_arrayAddBool(pj_Array* array, pj_boolean boolean);
+EXTERN_C void pj_arrayAddString(pj_Array* array, const char* str);
+EXTERN_C void pj_arrayAddArray(pj_Array* array, pj_Array* other);
+EXTERN_C void pj_arrayAddObj(pj_Array* array, pj_Object* obj);
+EXTERN_C void pj_arrayAddNull(pj_Array* array);
 
 /* Object Set */
-EXTERN_C PUREJSON_LIB_API void pj_objSetNum(pj_Object* obj, const char* propName, double num);
-EXTERN_C PUREJSON_LIB_API void pj_objSetBool(pj_Object* obj, const char* propName, pj_boolean boolean);
-EXTERN_C PUREJSON_LIB_API void pj_objSetString(pj_Object* obj, const char* propName, const char* str);
-EXTERN_C PUREJSON_LIB_API void pj_objSetArray(pj_Object* obj, const char* propName, pj_Array* array);
-EXTERN_C PUREJSON_LIB_API void pj_objSetObj(pj_Object* obj, const char* propName, pj_Object* other);
-EXTERN_C PUREJSON_LIB_API void pj_objSetNull(pj_Object* obj, const char* propName);
+EXTERN_C void pj_objSetNum(pj_Object* obj, const char* propName, double num);
+EXTERN_C void pj_objSetBool(pj_Object* obj, const char* propName, pj_boolean boolean);
+EXTERN_C void pj_objSetString(pj_Object* obj, const char* propName, const char* str);
+EXTERN_C void pj_objSetArray(pj_Object* obj, const char* propName, pj_Array* array);
+EXTERN_C void pj_objSetObj(pj_Object* obj, const char* propName, pj_Object* other);
+EXTERN_C void pj_objSetNull(pj_Object* obj, const char* propName);
 
 /* Value Inspection */
-EXTERN_C PUREJSON_LIB_API pj_ValueType pj_getObjPropType(pj_Object* obj, const char* propName);
-EXTERN_C PUREJSON_LIB_API pj_ValueType pj_getArrayElemType(pj_Array* array, size_t index);
-EXTERN_C PUREJSON_LIB_API pj_boolean pj_isArrayElemOfType(pj_Array* array, size_t index, pj_ValueType type);
-EXTERN_C PUREJSON_LIB_API pj_boolean pj_isObjPropOfType(pj_Object* obj, const char* propName, pj_ValueType type);
+EXTERN_C pj_ValueType pj_getObjPropType(pj_Object* obj, const char* propName);
+EXTERN_C pj_ValueType pj_getArrayElemType(pj_Array* array, size_t index);
+EXTERN_C pj_boolean pj_isArrayElemOfType(pj_Array* array, size_t index, pj_ValueType type);
+EXTERN_C pj_boolean pj_isObjPropOfType(pj_Object* obj, const char* propName, pj_ValueType type);
 
 /* Iteration */
-EXTERN_C PUREJSON_LIB_API void pj_objForEachKey(pj_Object* obj, void(*callback)(pj_Object*, const char*));
-EXTERN_C PUREJSON_LIB_API size_t pj_getArraySize(pj_Array* array);
+EXTERN_C void pj_objForEachKey(pj_Object* obj, void(*callback)(pj_Object*, const char*));
+EXTERN_C size_t pj_getArraySize(pj_Array* array);
 
 
 #if defined(PURE_JSON_IMPLEMENTATION)
 
 #if !defined(__cplusplus)
 #pragma message("C++ Compiler not detected. please compile implementation as a cpp file");
+#endif
+
+#if defined (_WIN32) || defined(_WIN64)
+#pragma warning(disable : 4996)
 #endif
 
 #include <unordered_map>
@@ -305,6 +299,12 @@ struct Cursor
 	const char* at;
 };
 
+struct PeekToken
+{
+	Token token;
+	Cursor futureCursor;
+};
+
 void eatWhitespace(Cursor& cursor);
 
 Token getToken(Cursor& cursor);
@@ -337,6 +337,14 @@ void eatWhitespace(Cursor& cursor)
 		++cursor.at;
 }
 
+PeekToken peekToken(const Cursor& cursor)
+{
+	PeekToken pt = {};
+	pt.futureCursor = cursor;
+
+	pt.token = getToken(pt.futureCursor);
+	return pt;
+}
 
 Token getToken(Cursor& cursor)
 {
@@ -937,6 +945,16 @@ void parseJSONObject(Cursor& cursor, pj_Object * json)
 {
 	bool done = false;
 
+	{
+		PeekToken pt = peekToken(cursor);
+		if (pt.token.type == Token::CLOSE_BRACE)
+		{
+			// empty object, advance cursor and bail
+			cursor = pt.futureCursor;
+			return;
+		}
+	}
+
 	while (!done && *cursor.at != NULL)
 	{
 		Token t = getToken(cursor);
@@ -955,6 +973,11 @@ void parseJSONObject(Cursor& cursor, pj_Object * json)
 
 				if (!parseJSONValue(cursor, val, jprop.val))
 				{
+					// If we failed on a close brace it probably means
+					// this was an empty object so we can safely bail out
+					if (val.type == Token::CLOSE_BRACE)
+						return;
+
 					// TODO: ERROR HANDLING
 					return;
 				}
@@ -984,9 +1007,17 @@ void parseJSONObject(Cursor& cursor, pj_Object * json)
 
 void parseJSONArray(Cursor & cursor, pj_Array * array)
 {
-	bool done = false;
+	{
+		PeekToken pt = peekToken(cursor);
+		if (pt.token.type == Token::SQUARE_BRACKET_CLOSE)
+		{
+			// empty array, advance cursor and bail
+			cursor = pt.futureCursor;
+			return;
+		}
+	}
 
-	while (!done && *cursor.at != NULL)
+	while (*cursor.at != NULL)
 	{
 		Token item = getToken(cursor);
 		JsonVal val = { };
@@ -1002,7 +1033,7 @@ void parseJSONArray(Cursor & cursor, pj_Array * array)
 		Token next = getToken(cursor);
 		if (next.type == Token::SQUARE_BRACKET_CLOSE)
 		{
-			done = true;
+			break; // done
 		}
 		else if (next.type != Token::COMMA)
 		{
