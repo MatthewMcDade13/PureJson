@@ -1,30 +1,34 @@
 /*
-	zlib License
+zlib License
 
-	Copyright (c) 2018, Matthew McDade (@Matthew.McDade13)
+Copyright (c) 2018, Matthew McDade (@Matthew.McDade13)
 
-	This software is provided 'as-is', without any express or implied
-	warranty. In no event will the authors be held liable for any damages
-	arising from the use of this software.
+This software is provided 'as-is', without any express or implied
+warranty. In no event will the authors be held liable for any damages
+arising from the use of this software.
 
-	Permission is granted to anyone to use this software for any purpose,
-	including commercial applications, and to alter it and redistribute it
-	freely, subject to the following restrictions:
+Permission is granted to anyone to use this software for any purpose,
+including commercial applications, and to alter it and redistribute it
+freely, subject to the following restrictions:
 
-	1. The origin of this software must not be misrepresented; you must not
-	claim that you wrote the original software. If you use this software
-	in a product, an acknowledgment in the product documentation would be
-	appreciated but is not required.
-	2. Altered source versions must be plainly marked as such, and must not be
-	misrepresented as being the original software.
-	3. This notice may not be removed or altered from any source distribution.
+1. The origin of this software must not be misrepresented; you must not
+claim that you wrote the original software. If you use this software
+in a product, an acknowledgment in the product documentation would be
+appreciated but is not required.
+2. Altered source versions must be plainly marked as such, and must not be
+misrepresented as being the original software.
+3. This notice may not be removed or altered from any source distribution.
 
 */
 
 #ifndef PURE_JSON_H
 #define PURE_JSON_H
 
+#if defined(__cplusplus)
 #include <cstddef>
+#else
+#include <stddef.h>
+#endif
 
 #if defined(__cplusplus)
 #define EXTERN_C extern "C"
@@ -38,8 +42,8 @@ typedef bool pj_boolean;
 typedef int pj_boolean;
 #endif
 
-struct pj_Object;
-struct pj_Array;
+typedef struct pj_Object pj_Object;
+typedef struct pj_Array pj_Array;
 
 #if defined(__cplusplus)
 namespace pj
@@ -66,7 +70,7 @@ namespace pj
 }
 #endif 
 
-enum pj_ValueType
+typedef enum
 {
 	PJ_VALUE_NUMBER,
 	PJ_VALUE_STRING,
@@ -74,67 +78,68 @@ enum pj_ValueType
 	PJ_VALUE_OBJ,
 	PJ_VALUE_ARRAY,
 	PJ_VALUE_NULL
-};
+} pj_ValueType;
 
 /* Object Create/Delete */
-EXTERN_C  pj_Object* pj_createObj();
-EXTERN_C  void pj_deleteObj(pj_Object* json);
+EXTERN_C pj_Object* pj_createObj();
+EXTERN_C void pj_deleteObj(pj_Object* json);
 
 /* Array Create/Delete */
-EXTERN_C  pj_Array* pj_createArray();
-EXTERN_C  void pj_deleteArray(pj_Array* array);
+EXTERN_C pj_Array* pj_createArray();
+EXTERN_C void pj_deleteArray(pj_Array* array);
 
-EXTERN_C  void pj_deleteString(char* jsonString);
+EXTERN_C void pj_deleteString(char* jsonString);
 
 /* Object/Array Parsers */
-EXTERN_C  pj_Object* pj_parseObj(const char* raw);
-EXTERN_C  pj_Array* pj_parseArray(const char* raw);
+EXTERN_C pj_Object* pj_parseObj(const char* raw);
+EXTERN_C pj_Array* pj_parseArray(const char* raw);
 
-EXTERN_C  char* pj_arrayToString(pj_Array* array, pj_boolean isPretty);
-EXTERN_C  pj_boolean pj_arrayToFile(pj_Array* array, pj_boolean isPretty, const char* fileName);
-EXTERN_C  char* pj_objToString(pj_Object* obj, pj_boolean isPretty);
-EXTERN_C  pj_boolean pj_objToFile(pj_Object* obj, pj_boolean isPretty, const char* fileName);
+EXTERN_C char* pj_arrayToString(pj_Array* array, pj_boolean isPretty);
+EXTERN_C pj_boolean pj_arrayToFile(pj_Array* array, pj_boolean isPretty, const char* fileName);
+EXTERN_C char* pj_objToString(pj_Object* obj, pj_boolean isPretty);
+EXTERN_C pj_boolean pj_objToFile(pj_Object* obj, pj_boolean isPretty, const char* fileName);
 
 /* Object Get */
-EXTERN_C  double pj_objGetNum(pj_Object* json, const char* propName);
-EXTERN_C  pj_boolean pj_objGetBool(pj_Object* json, const char* propName);
-EXTERN_C  const char* pj_objGetString(pj_Object* json, const char* propName);
-EXTERN_C  pj_Array* pj_objGetArray(pj_Object* json, const char* propName);
-EXTERN_C  pj_Object* pj_objGetObj(pj_Object* json, const char* propName);
+EXTERN_C double pj_objGetNum(pj_Object* json, const char* propName);
+EXTERN_C pj_boolean pj_objGetBool(pj_Object* json, const char* propName);
+EXTERN_C const char* pj_objGetString(pj_Object* json, const char* propName);
+EXTERN_C pj_Array* pj_objGetArray(pj_Object* json, const char* propName);
+EXTERN_C pj_Object* pj_objGetObj(pj_Object* json, const char* propName);
 
 /* Array Get */
-EXTERN_C  double pj_arrayGetNum(pj_Array* array, size_t index);
-EXTERN_C  pj_boolean pj_arrayGetBool(pj_Array* array, size_t index);
-EXTERN_C  const char* pj_arrayGetString(pj_Array* array, size_t index);
-EXTERN_C  pj_Array* pj_arrayGetArray(pj_Array* array, size_t index);
-EXTERN_C  pj_Object* pj_arrayGetObj(pj_Array* array, size_t index);
+EXTERN_C double pj_arrayGetNum(pj_Array* array, size_t index);
+EXTERN_C pj_boolean pj_arrayGetBool(pj_Array* array, size_t index);
+EXTERN_C const char* pj_arrayGetString(pj_Array* array, size_t index);
+EXTERN_C pj_Array* pj_arrayGetArray(pj_Array* array, size_t index);
+EXTERN_C pj_Object* pj_arrayGetObj(pj_Array* array, size_t index);
 
 /* Array Add */
-EXTERN_C  void pj_arrayAddNum(pj_Array* array, double num);
-EXTERN_C  void pj_arrayAddBool(pj_Array* array, pj_boolean boolean);
-EXTERN_C  void pj_arrayAddString(pj_Array* array, const char* str);
-EXTERN_C  void pj_arrayAddArray(pj_Array* array, pj_Array* other);
-EXTERN_C  void pj_arrayAddObj(pj_Array* array, pj_Object* obj);
-EXTERN_C  void pj_arrayAddNull(pj_Array* array);
+EXTERN_C void pj_arrayAddNum(pj_Array* array, double num);
+EXTERN_C void pj_arrayAddBool(pj_Array* array, pj_boolean boolean);
+EXTERN_C void pj_arrayAddString(pj_Array* array, const char* str);
+EXTERN_C void pj_arrayAddArray(pj_Array* array, pj_Array* other);
+EXTERN_C void pj_arrayAddObj(pj_Array* array, pj_Object* obj);
+EXTERN_C void pj_arrayAddNull(pj_Array* array);
 
 /* Object Set */
-EXTERN_C  void pj_objSetNum(pj_Object* obj, const char* propName, double num);
-EXTERN_C  void pj_objSetBool(pj_Object* obj, const char* propName, pj_boolean boolean);
-EXTERN_C  void pj_objSetString(pj_Object* obj, const char* propName, const char* str);
-EXTERN_C  void pj_objSetArray(pj_Object* obj, const char* propName, pj_Array* array);
-EXTERN_C  void pj_objSetObj(pj_Object* obj, const char* propName, pj_Object* other);
-EXTERN_C  void pj_objSetNull(pj_Object* obj, const char* propName);
+EXTERN_C void pj_objSetNum(pj_Object* obj, const char* propName, double num);
+EXTERN_C void pj_objSetBool(pj_Object* obj, const char* propName, pj_boolean boolean);
+EXTERN_C void pj_objSetString(pj_Object* obj, const char* propName, const char* str);
+EXTERN_C void pj_objSetArray(pj_Object* obj, const char* propName, pj_Array* array);
+EXTERN_C void pj_objSetObj(pj_Object* obj, const char* propName, pj_Object* other);
+EXTERN_C void pj_objSetNull(pj_Object* obj, const char* propName);
 
 /* Value Inspection */
-EXTERN_C  pj_ValueType pj_getObjPropType(pj_Object* obj, const char* propName);
-EXTERN_C  pj_ValueType pj_getArrayElemType(pj_Array* array, size_t index);
-EXTERN_C  pj_boolean pj_isArrayElemOfType(pj_Array* array, size_t index, pj_ValueType type);
-EXTERN_C  pj_boolean pj_isObjPropOfType(pj_Object* obj, const char* propName, pj_ValueType type);
+EXTERN_C pj_ValueType pj_getObjPropType(pj_Object* obj, const char* propName);
+EXTERN_C pj_ValueType pj_getArrayElemType(pj_Array* array, size_t index);
+EXTERN_C pj_boolean pj_isArrayElemOfType(pj_Array* array, size_t index, pj_ValueType type);
+EXTERN_C pj_boolean pj_isObjPropOfType(pj_Object* obj, const char* propName, pj_ValueType type);
 
 /* Iteration */
-EXTERN_C  void pj_objForEachKey(pj_Object* obj, void(*callback)(pj_Object*, const char*));
-EXTERN_C  size_t pj_getArraySize(pj_Array* array);
+EXTERN_C void pj_objForEachKey(pj_Object* obj, void(*callback)(pj_Object*, const char*));
+EXTERN_C size_t pj_getArraySize(pj_Array* array);
 
+EXTERN_C const char* pj_popError();
 
 #if defined(PURE_JSON_IMPLEMENTATION)
 
@@ -154,6 +159,37 @@ EXTERN_C  size_t pj_getArraySize(pj_Array* array);
 #include <cstring>
 #include <string>
 
+static constexpr size_t MAX_ERRORS = 10;
+static struct Errors {
+	// end of stack is reserved for null string
+	std::string stack[MAX_ERRORS + 1] = {};
+	size_t count = 0;
+
+	void push(const std::string& error)
+	{
+		stack[count] = error;
+
+		count++;
+		if (count >= MAX_ERRORS)
+		{
+			count = MAX_ERRORS - 1;
+			return;
+		}
+	}
+
+	const std::string& pop()
+	{
+		count--;
+		if (count < 0)
+		{
+			count = 0;
+			return stack[MAX_ERRORS];
+		}
+		return stack[count];
+	}
+
+} errors;
+
 // TODO: Verify no memory leaks!!
 // TODO: Implement Error Handling (preferably don't want to crash if json is invalid or
 // user attempts to get value from property that does not exist.
@@ -163,11 +199,12 @@ void snipDblQuotes(const char* str, const char *& begin, const char *& end)
 	begin = ++str;
 	end = str;
 
-	while (*end != '"')
+	while (*end != '\"')
 	{
 		if (*end == NULL)
 		{
-			std::cerr << "Could not find end of string parsed string" << std::endl;
+			using namespace std::string_literals;
+			errors.push("PARSER :: Could not find end of parsed string: "s + str);
 			// TODO: ERROR
 			end--;
 			break;
@@ -297,6 +334,7 @@ struct Token
 struct Cursor
 {
 	const char* at;
+	size_t lineNo = 0;
 };
 
 struct PeekToken
@@ -334,7 +372,12 @@ static Token parseAlNumLiteralToken(const char* str);
 void eatWhitespace(Cursor& cursor)
 {
 	while (isspace(*cursor.at) && *cursor.at != NULL)
+	{
+		if (*cursor.at == '\n')
+			cursor.lineNo++;
+
 		++cursor.at;
+	}
 }
 
 PeekToken peekToken(const Cursor& cursor)
@@ -359,29 +402,35 @@ Token getToken(Cursor& cursor)
 
 	switch (*cursor.at)
 	{
-		case '{': t.type = Token::OPEN_BRACE;           break;
-		case '}': t.type = Token::CLOSE_BRACE;          break;
-		case ':': t.type = Token::COLON;			    break;
-		case ',': t.type = Token::COMMA;			    break;
-		case '[': t.type = Token::SQUARE_BRACKET_OPEN;  break;
-		case ']': t.type = Token::SQUARE_BRACKET_CLOSE; break;
-		case 'f':
-		case 't':
-		case 'n':
-			t = parseAlNumLiteralToken(cursor.at);			
+	case '{': t.type = Token::OPEN_BRACE;           break;
+	case '}': t.type = Token::CLOSE_BRACE;          break;
+	case ':': t.type = Token::COLON;			    break;
+	case ',': t.type = Token::COMMA;			    break;
+	case '[': t.type = Token::SQUARE_BRACKET_OPEN;  break;
+	case ']': t.type = Token::SQUARE_BRACKET_CLOSE; break;
+	case 'f':
+	case 't':
+	case 'n':
+		t = parseAlNumLiteralToken(cursor.at);
 		break;
-		case '"':
-			t = parseStringToken(cursor.at);
+	case '"':
+		t = parseStringToken(cursor.at);
+		if (t.type == Token::UNKNOWN)
+		{
+			using namespace std::string_literals;
+			errors.push("Unknown token for assumed string literal. Check closing \"; LINENO: "s + std::to_string(cursor.lineNo));
+		}
+
 		break;
-		default:
-			if (isdigit(*cursor.at) || *cursor.at == '-')
-			{
-				t = parseNumToken(cursor.at);
-			}
-			else
-			{
-				return unknownToken();
-			}
+	default:
+		if (isdigit(*cursor.at) || *cursor.at == '-')
+		{
+			t = parseNumToken(cursor.at);
+		}
+		else
+		{
+			return unknownToken();
+		}
 	}
 
 	cursor.at += t.length;
@@ -406,7 +455,7 @@ Token parseNumToken(const char * str)
 
 Token parseStringToken(const char * str)
 {
-	Token t = { };
+	Token t = {};
 	t.length = 1;
 	t.str = str;
 	++str;
@@ -418,7 +467,6 @@ Token parseStringToken(const char * str)
 
 		if (*str == NULL)
 		{
-			std::cerr << "Reached End of file. Missing closing \" for string literal." << std::endl;
 			return unknownToken();
 		}
 	}
@@ -511,17 +559,17 @@ private:
 	{
 		switch (type)
 		{
-			case PJ_VALUE_STRING: 
-				delete[] string;
-				string = nullptr;     
+		case PJ_VALUE_STRING:
+			delete[] string;
+			string = nullptr;
 			break;
-			case PJ_VALUE_ARRAY: 
-				pj_deleteArray(array); 
-				array = nullptr;
+		case PJ_VALUE_ARRAY:
+			pj_deleteArray(array);
+			array = nullptr;
 			break;
-			case PJ_VALUE_OBJ:    
-				pj_deleteObj(obj); 
-				obj = nullptr;
+		case PJ_VALUE_OBJ:
+			pj_deleteObj(obj);
+			obj = nullptr;
 			break;
 		}
 	}
@@ -609,10 +657,13 @@ T getObjectValue(pj_Object* json, const char* propName, T failVal = 0)
 		{
 			size_t pos = name.find(".");
 			std::string prop = name.substr(0, pos);
+
 			JsonProp* jprop = findProp(*json, prop.c_str());
 			assert(jprop->val.type == PJ_VALUE_OBJ);
+
 			pj_Object* obj = jprop->val.obj;
 			name.erase(0, pos + delim.length());
+
 			return getObjectValue<T, valType>(obj, name.c_str(), failVal);
 		}
 	}
@@ -649,7 +700,7 @@ EXTERN_C pj_Object * pj_parseObj(const char * raw)
 	Cursor c = { raw };
 
 	if (getToken(c).type == Token::OPEN_BRACE)
-	{	
+	{
 		parseJSONObject(c, json);
 		return json;
 	}
@@ -956,9 +1007,15 @@ EXTERN_C size_t pj_getArraySize(pj_Array* array)
 	return array->size;
 }
 
+EXTERN_C const char* pj_popError()
+{
+	const std::string& error = errors.pop();
+	return error.size() == 0 ? nullptr : error.c_str();
+}
 
 void parseJSONObject(Cursor& cursor, pj_Object * json)
 {
+	using namespace std::string_literals;
 	bool done = false;
 
 	{
@@ -989,21 +1046,23 @@ void parseJSONObject(Cursor& cursor, pj_Object * json)
 
 				if (!parseJSONValue(cursor, val, jprop.val))
 				{
-					// If we failed on a close brace it probably means
-					// this was an empty object so we can safely bail out
-					if (val.type == Token::CLOSE_BRACE)
-						return;
-
 					// TODO: ERROR HANDLING
 					return;
 				}
 
 				json->data.emplace(propName, std::move(jprop));
-			
+
+				PeekToken comma = peekToken(cursor);
+				if (comma.token.type != Token::COMMA)
+				{
+					errors.push("PARSER :: Missing comma after property value; LINENO: "s + std::to_string(cursor.lineNo));
+					return;
+				}
+
 			}
 			else
 			{
-				std::cerr << "Expected Colon after property name" << std::endl;
+				errors.push("PARSER :: Expected Colon after property name; LINENO: "s + std::to_string(cursor.lineNo));
 				break;
 				// TODO: ERROR
 			}
@@ -1011,12 +1070,6 @@ void parseJSONObject(Cursor& cursor, pj_Object * json)
 		else if (t.type == Token::CLOSE_BRACE)
 		{
 			done = true;
-		}
-		else if (t.type != Token::COMMA)
-		{
-			std::cerr << "Missing comma after property name" << std::endl;
-			break;
-			// TODO: ERROR
 		}
 	}
 }
@@ -1036,7 +1089,7 @@ void parseJSONArray(Cursor & cursor, pj_Array * array)
 	while (*cursor.at != NULL)
 	{
 		Token item = getToken(cursor);
-		JsonVal val = { };
+		JsonVal val = {};
 
 		if (!parseJSONValue(cursor, item, val))
 		{
@@ -1053,7 +1106,8 @@ void parseJSONArray(Cursor & cursor, pj_Array * array)
 		}
 		else if (next.type != Token::COMMA)
 		{
-			std::cerr << "Missing comma after array element" << std::endl;
+			using namespace std::string_literals;
+			errors.push("PARSER :: Missing comma after array element; LINENO: "s + std::to_string(cursor.lineNo));
 			break;
 			// TODO: ERROR
 		}
@@ -1064,45 +1118,46 @@ bool parseJSONValue(Cursor & cursor, Token & valueToken, JsonVal & val)
 {
 	switch (valueToken.type)
 	{
-		case Token::BOOL:
-			val.type = PJ_VALUE_BOOL;
+	case Token::BOOL:
+		val.type = PJ_VALUE_BOOL;
 
-			if (cmpSubStr(valueToken.str, "false", valueToken.length))
-			{
-				val.boolean = false;
-			}
-			else if (cmpSubStr(valueToken.str, "true", valueToken.length))
-			{
-				val.boolean = true;
-			}
+		if (cmpSubStr(valueToken.str, "false", valueToken.length))
+		{
+			val.boolean = false;
+		}
+		else if (cmpSubStr(valueToken.str, "true", valueToken.length))
+		{
+			val.boolean = true;
+		}
 
 		break;
-		case Token::NUMBER:
-			val.type = PJ_VALUE_NUMBER;
-			char buffer[255];
-			memcpy(buffer, valueToken.str, valueToken.length);
-			val.num = atof(buffer);
+	case Token::NUMBER:
+		val.type = PJ_VALUE_NUMBER;
+		char buffer[255];
+		memcpy(buffer, valueToken.str, valueToken.length);
+		val.num = atof(buffer);
 		break;
-		case Token::STRING: 
-			val.type = PJ_VALUE_STRING;
-			val.string = parseCString(valueToken.str);
+	case Token::STRING:
+		val.type = PJ_VALUE_STRING;
+		val.string = parseCString(valueToken.str);
 		break;
-		case Token::JSON_NULL:
-			val.type = PJ_VALUE_NULL;
+	case Token::JSON_NULL:
+		val.type = PJ_VALUE_NULL;
 		break;
-		case Token::SQUARE_BRACKET_OPEN:
-			val.type = PJ_VALUE_ARRAY;
-			val.array = pj_createArray();
-			parseJSONArray(cursor, val.array);
+	case Token::SQUARE_BRACKET_OPEN:
+		val.type = PJ_VALUE_ARRAY;
+		val.array = pj_createArray();
+		parseJSONArray(cursor, val.array);
 		break;
-		case Token::OPEN_BRACE:
-			val.type = PJ_VALUE_OBJ;
-			val.obj = pj_createObj();
-			parseJSONObject(cursor, val.obj);
-			break;
-		default:
-			std::cerr << "Value Token of unknown or unspecified type" << std::endl;
-			return false;
+	case Token::OPEN_BRACE:
+		val.type = PJ_VALUE_OBJ;
+		val.obj = pj_createObj();
+		parseJSONObject(cursor, val.obj);
+		break;
+	default:
+		using namespace std::string_literals;
+		errors.push("PARSER :: Value Token of unknown or unspecified type; LINENO: "s + std::to_string(cursor.lineNo));
+		return false;
 	}
 
 	return true;
@@ -1194,28 +1249,28 @@ char * valueToString(JsonVal & val, int depth, pj_boolean isPretty)
 
 	switch (val.type)
 	{
-		case PJ_VALUE_NUMBER:
-			char numBuffer[255];
-			snprintf(numBuffer, 255, "%f", val.num);
-			moveConcatString(result, numBuffer);
+	case PJ_VALUE_NUMBER:
+		char numBuffer[255];
+		snprintf(numBuffer, 255, "%f", val.num);
+		moveConcatString(result, numBuffer);
 		break;
-		case PJ_VALUE_STRING:
-			moveConcatStringLiteral(result, val.string);
+	case PJ_VALUE_STRING:
+		moveConcatStringLiteral(result, val.string);
 		break;
-		case PJ_VALUE_BOOL:
-			if (val.boolean)
-				moveConcatString(result, "true");
-			else
-				moveConcatString(result, "false");
+	case PJ_VALUE_BOOL:
+		if (val.boolean)
+			moveConcatString(result, "true");
+		else
+			moveConcatString(result, "false");
 		break;
-		case PJ_VALUE_OBJ:
-			moveConcatString(result, objectToString(val.obj, depth + 1, isPretty));
+	case PJ_VALUE_OBJ:
+		moveConcatString(result, objectToString(val.obj, depth + 1, isPretty));
 		break;
-		case PJ_VALUE_ARRAY:
-			moveConcatString(result, arrayToString(val.array, depth + 1, isPretty));
+	case PJ_VALUE_ARRAY:
+		moveConcatString(result, arrayToString(val.array, depth + 1, isPretty));
 		break;
-		case PJ_VALUE_NULL:
-			moveConcatString(result, "null");
+	case PJ_VALUE_NULL:
+		moveConcatString(result, "null");
 		break;
 	}
 
@@ -1227,7 +1282,11 @@ pj_boolean writeToFile(const char* fileName, char * str)
 	FILE* file = fopen(fileName, "w");
 	if (file == NULL)
 	{
-		std::cerr << "Cannot open file: " << fileName << std::endl;
+		{
+			std::string error = "Cannot open file: ";
+			error += fileName;
+			errors.push(error);
+		}
 		fclose(file);
 		return false;
 	}
@@ -1275,7 +1334,7 @@ template struct pj::Handle<pj_Object>;
 template struct pj::Handle<char>;
 
 template<typename T>
-pj::Handle<T>::Handle(T* handle): handle(handle) { }
+pj::Handle<T>::Handle(T* handle) : handle(handle) { }
 
 template<typename T>
 pj::Handle<T>::~Handle() { freeHandle(handle); }
