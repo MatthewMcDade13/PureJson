@@ -56,3 +56,5 @@ int main()
 
  There is also somewhat of a test/example in JsonMain directory
  
+ Inspired by Casey Muratori's youtube video on parsing: https://www.youtube.com/watch?v=Ha3NbEhXAtU
+ 
